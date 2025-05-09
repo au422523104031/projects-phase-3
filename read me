@@ -1,0 +1,22 @@
+# Retail Optimization Using Association Rule Mining
+
+**Project Phase 3 – T.Suruthiliya**  
+Department of Information Technology  
+University College of Engineering, Villupuram
+
+## Overview
+
+This project applies **Association Rule Mining (ARM)** to customer transaction data to identify hidden patterns in purchasing behavior. These patterns help retailers optimize store layout, product bundling, promotions, and inventory strategies.
+
+## Problem Statement
+
+Retailers often struggle to understand complex customer purchasing behavior. By analyzing transactional data using the **Apriori algorithm**, this project extracts frequent itemsets and meaningful product associations.
+
+## Dataset
+
+- **Name:** Online Retail Dataset  
+- **Source:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Online+Retail)  
+- **Size:** ~541,909 transactions  
+- **Fields:** InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country
+
+## Technologies Used
