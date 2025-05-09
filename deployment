@@ -1,92 +1,70 @@
 
+Retail Optimization Using Association Rule Mining – Demo Code
 
-Option 1: Deploy on Localhost (Development)
+# 1. Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from mlxtend.frequent_patterns import apriori, association_rules
 
-Steps:
-
-1. Clone or extract the app files into a directory.
-
-
-2. Create a virtual environment (optional but recommended):
-
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-
-
-3. Install dependencies:
-
-pip install -r requirements.txt
-
-
-4. Run the Flask app:
-
-python app.py
-
-
-5. Open http://127.0.0.1:5000 in your browser.
-
-
+# 2. Load Dataset
+df = pd.read_excel("OnlineRetail.xlsx")  # Replace with your dataset path
+df.head()
 
 
 ---
 
-Option 2: Deploy on Heroku (Cloud Deployment - Free Tier Available)
-
-Files to Add:
-
-Procfile (no extension):
-
-web: python app.py
-
-runtime.txt (optional):
-
-python-3.10.8
-
-
-Steps:
-
-1. Install Heroku CLI and login:
-
-heroku login
-
-
-2. Initialize a Git repo:
-
-git init
-git add .
-git commit -m "Initial commit"
-
-
-3. Create the Heroku app:
-
-heroku create retail-arm-app
-
-
-4. Deploy:
-
-git push heroku master
-
-
-5. Open:
-
-heroku open
-
-
+# 3. Basic Preprocessing
+df.dropna(subset=['InvoiceNo', 'Description'], inplace=True)
+df = df[df['Quantity'] > 0]
+df = df[df['InvoiceNo'].astype(str).str.startswith('C') == False]
+df['InvoiceNo'] = df['InvoiceNo'].astype(str)
+df['Description'] = df['Description'].str.strip()
+df.head()
 
 
 ---
 
-Option 3: Deploy on PythonAnywhere (Free Web Hosting for Flask)
-
-Steps:
-
-1. Sign up at pythonanywhere.com.
-
-
-2. Create a new Flask Web App.
-
-
-3. Upload your app files via the web UI or Git.
+# 4. Create Basket Format (UK only)
+basket = (df[df['Country'] =="United Kingdom"]
+          .groupby(['InvoiceNo', 'Description'])['Quantity']
+          .sum().unstack().reset_index().fillna(0)
+          .set_index('InvoiceNo'))
+# Convert values to 1/0
+basket = basket.applymap(lambda x: 1 if x > 0 else 0)
+basket.head()
 
 
-4. Set the WSG
+---
+
+# 5. Apply Apriori Algorithm
+frequent_itemsets = apriori(basket, min_support=0.02, use_colnames=True)
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+rules = rules.sort_values(by='lift', ascending=False)
+rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']].head()
+
+
+---
+
+# 6. Visualize Top 10 Rules by Lift
+top_rules = rules.nlargest(10, 'lift')
+plt.figure(figsize=(10, 6))
+sns.barplot(x='lift', y=top_rules.index, data=top_rules, orient='h')
+plt.title('Top 10 Association Rules by Lift')
+plt.xlabel('Lift')
+plt.show()
+
+
+---
+
+# 7. Create Network Graph (Optional)
+import networkx as nx
+
+G = nx.DiGraph()
+for _, row in top_rules.iterrows():
+    for ant in row['antecedents']:
+        for cons in row['consequents']:
+            G.add_edge(ant, cons, weight=row['lift'])
+
+plt.figure(figsize=(8,6))
+pos = nx
